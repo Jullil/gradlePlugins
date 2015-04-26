@@ -1,0 +1,130 @@
+ext {
+    aGroup = 'jullill'
+    aVersion = '0.0.1-SNAPSHOT'
+}
+
+//buildscript {
+//    repositories {
+//        mavenLocal()
+//        maven {
+//            url uri('../repo')
+//        }
+//    }
+//
+//    dependencies {
+//        classpath group: 'org.github.julil', name: 'gradle-plugins', version: '1.0-SNAPSHOT'
+//    }
+//}
+apply plugin: 'groovy'
+apply plugin: IdeaToGradleConverterPlugin
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile 'org.scream3r:jssc:2.8.0'
+}
+
+class IdeaToGradleConverterPlugin implements Plugin<Project> {
+
+    static def parseIdeaLibraries(ArrayList<File> libraries, Project project) {
+        def result = [:]
+        libraries.each{
+            def projectPath = project.projectDir.absolutePath
+            def rootTag = new XmlParser().parse(it)
+
+            result += [(rootTag.library.@name.get(0)):
+                [
+                 'classesPath': replaceProjectPath(rootTag.library.CLASSES.root.@url, projectPath),
+                 'javaDocPath': replaceProjectPath(rootTag.library.JAVADOC.root.@url, projectPath),
+                 'sourcesPath': replaceProjectPath(rootTag.library.SOURCES.root.@url, projectPath)
+                ]
+            ]
+        }
+        result
+    }
+
+    static def replaceProjectPath(ArrayList<Path> path, String projectPath) {
+        path.collect{
+            it.replaceAll('jar:\\/\\/', '').replaceAll('\\$PROJECT_DIR\\$', projectPath).replaceAll('!\\/', '')
+        }
+    }
+
+    static def dependenciesTemplate = """dependencies {
+                                        |@dependenciesOutput@
+                                        |}""".stripMargin()
+
+    static def dependencyCompileTemplate = "compile @path@"
+
+    static def parseIml(File file, Map libraries, Project project) {
+        def output = ""
+        File buildFile = new File(file.parent + "/build.gradle")
+        def root = new XmlParser().parse(file)
+        root.component.orderEntry.find{
+            !it.library.@name.empty && it.library.@name.first().endsWith('Gradle: gwt-user')
+        }.collect {
+            it.SOURCES
+        }.each {
+            it.first().appendNode('root', ['url':'jar://$MODULE_DIR$/../../_lib/gwt-2.6.1/gwt-user.jar!/'])
+        }
+        println root
+//        def projectLibs = root.component.orderEntry.findAll { it.@type == "library" && it.@level == "project" }
+//        if (!projectLibs.isEmpty()) {
+//            //buildFile << dependenciesTemplate
+//            def filesOutput = ""
+//            projectLibs.each{
+//                def libName = it.@name
+//                def libPaths = libraries.get(libName)
+//                libPaths.'classesPath'.each {
+//                    filesOutput += "        '$it',\n"
+//                }
+//            }
+//            buildFile << """dependencies {
+//                            |   compile files(
+//                                    |$filesOutput
+//                            |   )
+//                            |}""".stripMargin()
+//        }
+
+
+    }
+
+    @Override
+    void apply(Project project) {
+        project.task('convertModule') << {
+            def libraries = parseIdeaLibraries(project.fileTree(dir: '.idea/libraries', include: '**/*.xml').findAll(), project)
+
+            project.projectDir.listFiles().each{
+                if (it.isDirectory()) {
+                    def files = it.listFiles()
+                    if (files.findAll { it.name.endsWith('build.gradle') }.empty) {
+                        def list = files.findAll { it.name.endsWith('.iml') }
+                        if (!list.empty) {
+                            parseIml(list.first(), libraries, project)
+                        }
+                    }
+                }
+            }
+
+
+//            FileTree tree = project.fileTree(project.projectDir.absolutePath) {
+//                include '**/'
+//            }
+
+            //println tree.collect()
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.3'
+}
+
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'java'
+    apply plugin: 'maven'
+
+    repositories {
+        mavenCentral()
+    }
+}
