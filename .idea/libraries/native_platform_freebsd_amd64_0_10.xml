@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="native-platform-freebsd-amd64-0.10">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/wrapper/dists/gradle-2.3-bin/a48v6zq5mdp1uyn9rwlj56945/gradle-2.3/lib/native-platform-freebsd-amd64-0.10.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

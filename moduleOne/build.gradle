@@ -1,57 +1,6 @@
-apply plugin: 'idea'
-
 dependencies {
-    compile files('/Users/jul/Projects/gradlePlugins/../_lib/gwt-2.6.1/gwt-user.jar') {
-      builtBy 'source'
-    }
-}
+   compile files(
+        'D:/jul/Projects/gradlePlugins/../_libs/gwt-2.6.1/gwt-user.jar',
 
-
-
-
-idea.module.iml {
-    withXml {
-        def project = provider.asNode()
-        project.appendNode('component', [name: 'ProjectCodeStyleSettingsManager'])
-
-        def codeStyleNode = findComponent(project, 'ProjectCodeStyleSettingsManager')
-        codeStyleNode.appendNode('option', [name: 'USE_PER_PROJECT_SETTINGS', value: 'true'])
-        def projectSettingsNode = codeStyleNode.appendNode('option', [name: 'PER_PROJECT_SETTINGS']).appendNode('value')
-
-        def codeStyleUrl = "fileUrl".toURL()
-
-        //If you want to read from a file you could do new File(path).text
-        def codeStyleXml = new XmlParser().parseText(codeStyleUrl.text)
-        codeStyleXml.children().each { option ->
-            projectSettingsNode.append(option)
-        }
-
-
-        def node = it.asNode()
-        node.appendNode('orderEntry', ['type': 'module-library'])
-
-        node.component.orderEntry.find {
-            !it.library.@name.empty && it.library.@name.first().endsWith('Gradle: gwt-user')
-        }.collect {
-            it.SOURCES
-        }.each {
-            it.first().appendNode('root', ['url': 'jar://$MODULE_DIR$/../../_lib/gwt-2.6.1/gwt-user.jar!/'])
-        }
-        node
-    }
-    //closure executed after *.iml content is loaded from existing file
-    //but before gradle build information is merged
-    beforeMerged { module ->
-        //if you want skip merging exclude dirs
-        module.excludeFolders.clear()
-        def project = module.asNode()
-        project.appendNode('component', [name: 'ProjectCodeStyleSettingsManager'])
-    }
-
-    //closure executed after *.iml content is loaded from existing file
-    //and after gradle build information is merged
-    whenMerged { module ->
-        //you can tinker with Module
-    }
-
+   )
 }

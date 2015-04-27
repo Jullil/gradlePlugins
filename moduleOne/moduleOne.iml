@@ -14,16 +14,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="">
-      <library name="Gradle: gwt-user">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../_lib/gwt-2.6.1/gwt-user.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/../../_lib/gwt-2.6.1/gwt-user.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
+    <orderEntry type="library" exported="" name="Gradle: gwt-user" level="project" />
   </component>
 </module>
+

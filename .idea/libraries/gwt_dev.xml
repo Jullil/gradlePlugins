@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="gwt-dev">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../_lib/gwt-2.6.1/gwt-dev.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

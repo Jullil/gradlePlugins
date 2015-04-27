@@ -6,14 +6,15 @@
         <option name="distributionType" value="WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleHome" value="$PROJECT_DIR$/../_lib/gradle-2.1" />
-        <option name="gradleJvm" value="System JDK 1.7" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/moduleOne" />
+            <option value="$PROJECT_DIR$/moduleTwo" />
           </set>
         </option>
       </GradleProjectSettings>
     </option>
   </component>
 </project>
+
