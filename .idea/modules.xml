@@ -4,8 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/gradlePlugins.iml" filepath="$PROJECT_DIR$/gradlePlugins.iml" />
       <module fileurl="file://$PROJECT_DIR$/moduleOne/moduleOne.iml" filepath="$PROJECT_DIR$/moduleOne/moduleOne.iml" />
+      <module fileurl="file://$PROJECT_DIR$/moduleThree/moduleThree.iml" filepath="$PROJECT_DIR$/moduleThree/moduleThree.iml" />
       <module fileurl="file://$PROJECT_DIR$/moduleTwo/moduleTwo.iml" filepath="$PROJECT_DIR$/moduleTwo/moduleTwo.iml" />
     </modules>
   </component>
 </project>
-

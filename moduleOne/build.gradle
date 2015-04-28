@@ -1,6 +1,0 @@
-dependencies {
-   compile files(
-        'D:/jul/Projects/gradlePlugins/../_libs/gwt-2.6.1/gwt-user.jar',
-
-   )
-}
