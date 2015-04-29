@@ -2,12 +2,11 @@
   <library name="gwt-dev">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/libs/gwt-dev.jar!/" />
-      <root url="jar://$PROJECT_DIR$/libs/gwt-user.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libs/validation-api-1.0.0.GA.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/libs/gwt-dev.jar!/" />
-      <root url="jar://$PROJECT_DIR$/libs/gwt-user.jar!/" />
     </SOURCES>
   </library>
 </component>

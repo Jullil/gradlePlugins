@@ -14,10 +14,12 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="gwt-dev" level="project" />
-    <orderEntry type="library" name="gwt-user" level="project" />
-    <orderEntry type="library" name="gwt-servlet" level="project" />
-    <orderEntry type="module" module-name="moduleThree" />
-    <orderEntry type="module" module-name="moduleTwo" />
+    <orderEntry type="module" module-name="moduleThree" exported="" />
+    <orderEntry type="module" module-name="moduleTwo" exported="" />
+    <orderEntry type="library" exported="" name="Gradle: gwt-dev" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: validation-api-1.0.0.GA" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: gwt-user" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: gwt-servlet" level="project" />
   </component>
 </module>
+

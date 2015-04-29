@@ -42,9 +42,13 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
         result
     }
 
-    static def parseIdeaProjectModules(File ideaModuleFile, Project project) {
+    /**
+     * Получает пути к iml-файлам модулей, подключенных в IDEA
+     * @return String[] - пути к модулям
+     */
+    static def parseIdeaProjectModules(File modulesFile, Project project) {
         def projectPath = project.projectDir.absolutePath
-        def root = new XmlParser().parse(ideaModuleFile)
+        def root = new XmlParser().parse(modulesFile)
         root.find{ it.@name == 'ProjectModuleManager' }.collect{
             replaceProjectPath(it.module.@filepath, projectPath)
         }.first().collect { moduleImlPath ->
@@ -72,6 +76,7 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
 //        }
 //        println root
         def projectLibs = root.component.orderEntry.findAll { it.@type == "library" && it.@level == "project" }
+        def projectModules = root.component.orderEntry.findAll { it.@type == "module" }
         if (!projectLibs.isEmpty()) {
             def filesOutput = ""
             projectLibs.each {
@@ -83,19 +88,22 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
                     }
                 }
             }
+            def projectsOutput = ""
+            projectModules.each{
+                def name = it.@'module-name'
+                projectsOutput += "    compile project(':$name')\n"
+            }
             buildFile << """dependencies {
                             |   compile files(
                                     |$filesOutput
                             |   )
+                                |$projectsOutput
                             |}""".stripMargin()
         }
     }
 
     static def addNewProjectToGradle(String projectName, File gradleSettingsFile) {
-        def importString = gradleSettingsFile.find { it.find("include '$projectName'") != null }
-        if (importString == null) {
-            gradleSettingsFile << "include '$projectName'\n"
-        }
+        gradleSettingsFile << "include '$projectName'\n"
     }
 
     @Override
@@ -104,12 +112,33 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
             def ideaProjectLibraries = parseIdeaLibraries(project.fileTree(dir: '.idea/libraries', include: '**/*.xml').findAll(), project)
             File gradleSettingsFile = project.file('settings.gradle')
 
+            Map<String, Project> gradleSubProjects = project.childProjects
+
             File ideaModuleFile = project.file('.idea/modules.xml')
             if (ideaModuleFile.exists()) {
-                parseIdeaProjectModules(ideaModuleFile, project).each{ moduleIml ->
-                    generateBuildScript(moduleIml, ideaProjectLibraries, project)
-                    def newProjectName = moduleIml.name.replace('.iml', '')
-                    addNewProjectToGradle(newProjectName, gradleSettingsFile)
+                parseIdeaProjectModules(ideaModuleFile, project).each { moduleIml ->
+                    def moduleDir = moduleIml.parentFile
+                    def moduleName = moduleIml.name.replace('.iml', '')
+                    if (moduleDir.path != project.projectDir.absolutePath) {
+                        if (!gradleSubProjects.containsKey(moduleName)) {
+                            if (moduleDir.listFiles().findAll{ it.name.endsWith('build.gradle') }.empty) {
+                                generateBuildScript(moduleIml, ideaProjectLibraries, project)
+                            }
+                            addNewProjectToGradle(moduleName, gradleSettingsFile)
+                        }
+                    }
+
+
+//                    if (moduleDir.path != project.projectDir.absolutePath && moduleDir.listFiles().findAll{ it.name.endsWith('build.gradle') }.empty)
+//
+//                    if (!gradleSubProjects.containsKey(moduleName) && moduleDir.path != project.projectDir.absolutePath) {
+//                        if( moduleDir.listFiles().findAll{ it.name.endsWith('build.gradle') }.empty) {
+//                        println moduleName
+//                    }
+
+//                    generateBuildScript(moduleIml, ideaProjectLibraries, project)
+//                    def projectName = moduleIml.name.replace('.iml', '')
+//                    addNewProjectToGradle(projectName, gradleSettingsFile)
                 }
             }
 //            project.projectDir.listFiles().each {
