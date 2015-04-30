@@ -75,6 +75,8 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
 //            it.first().appendNode('root', ['url':'jar://$MODULE_DIR$/../../_lib/gwt-2.6.1/gwt-user.jar!/'])
 //        }
 //        println root
+        def sourceDirs = root.component.content.sourceFolder
+        println sourceDirs
         def projectLibs = root.component.orderEntry.findAll { it.@type == "library" && it.@level == "project" }
         def projectModules = root.component.orderEntry.findAll { it.@type == "module" }
         if (!projectLibs.isEmpty()) {
@@ -100,6 +102,7 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
                                 |$projectsOutput
                             |}""".stripMargin()
         }
+
     }
 
     static def addNewProjectToGradle(String projectName, File gradleSettingsFile) {
