@@ -15,8 +15,23 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="moduleThree" exported="" />
-    <orderEntry type="library" exported="" name="Gradle: gwt-user" level="project" />
-    <orderEntry type="library" exported="" name="Gradle: requestfactory-client" level="project" />
+    <orderEntry type="module-library" exported="">
+      <library name="Gradle: gwt-dev">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../libs/gwt-dev.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library name="Gradle: validation-api-1.0.0.GA">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../libs/validation-api-1.0.0.GA.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
-

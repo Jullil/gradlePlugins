@@ -1,5 +1,2 @@
 rootProject.name = 'gradlePlugins'
 
-include 'moduleOne'
-include 'moduleThree'
-include 'moduleTwo'

@@ -49,7 +49,7 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
     static def parseIdeaProjectModules(File modulesFile, Project project) {
         def projectPath = project.projectDir.absolutePath
         def root = new XmlParser().parse(modulesFile)
-        root.find{ it.@name == 'ProjectModuleManager' }.collect{
+        root.find { it.@name == 'ProjectModuleManager' }.collect {
             replaceProjectPath(it.module.@filepath, projectPath)
         }.first().collect { moduleImlPath ->
             File moduleImlFile = project.file(moduleImlPath)
@@ -64,45 +64,128 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
         }
     }
 
+    static def cleanSourcePath(String url) {
+        url.replaceAll('file:\\/\\/\\$MODULE_DIR\\$\\/', '')
+    }
+
     static def generateBuildScript(File file, Map libraries, Project project) {
         File buildFile = new File(file.parent + "/build.gradle")
         def root = new XmlParser().parse(file)
-//        root.component.orderEntry.find{
-//            !it.library.@name.empty && it.library.@name.first().endsWith('Gradle: gwt-user')
-//        }.collect {
-//            it.SOURCES
-//        }.each {
-//            it.first().appendNode('root', ['url':'jar://$MODULE_DIR$/../../_lib/gwt-2.6.1/gwt-user.jar!/'])
-//        }
-//        println root
-        def sourceDirs = root.component.content.sourceFolder
-        println sourceDirs
-        def projectLibs = root.component.orderEntry.findAll { it.@type == "library" && it.@level == "project" }
-        def projectModules = root.component.orderEntry.findAll { it.@type == "module" }
-        if (!projectLibs.isEmpty()) {
-            def filesOutput = ""
-            projectLibs.each {
-                def libName = it.@name
-                if (libraries.containsKey(libName)) {
-                    def libPaths = libraries.get(libName)
-                    libPaths['classesPath'].each {
-                        filesOutput += "        '$it',\n"
-                    }
-                }
+
+        def sourceSetsOutput = generateSourceSets(root.component.content.sourceFolder)
+        if (!sourceSetsOutput.empty) {
+            buildFile << sourceSetsOutput + "\n\n"
+        }
+        def dependencies = generateDependencies(root.component.orderEntry, libraries)
+        if (!dependencies.empty) {
+            buildFile << dependencies + "\n\n"
+        }
+    }
+
+    def static generateSourceSets(ArrayList<Path> sourceList) {
+        def sources = [
+                'main': [
+                        'java'     : [],
+                        'resources': []
+                ],
+                'test': [
+                        'java'     : [],
+                        'resources': []
+                ]
+        ]
+        sourceList.each {
+            def path = cleanSourcePath(it.@url)
+            if (it.@isTestSource == 'false') {
+                sources['main']['java'] += "'${path}'"
+            } else if (it.@isTestSource == 'true') {
+                sources['test']['java'] += "'${path}'"
+            } else if (it.@type == 'java-resource') {
+                sources['main']['resources'] += "'${path}'"
+            } else if (it.@type == 'java-test-resource') {
+                sources['test']['resources'] += "'${path}'"
             }
-            def projectsOutput = ""
-            projectModules.each{
-                def name = it.@'module-name'
-                projectsOutput += "    compile project(':$name')\n"
-            }
-            buildFile << """dependencies {
-                            |   compile files(
-                                    |$filesOutput
-                            |   )
-                                |$projectsOutput
-                            |}""".stripMargin()
         }
 
+        def javaSourcesOutput = ""
+        if (!sources['main']['java'].empty) {
+            javaSourcesOutput = """java {
+                                    |           srcDirs = ${sources['main']['java']}
+                                    |       }""".stripMargin()
+        }
+        def testSourcesOutput = ""
+        if (!sources['test']['java'].empty) {
+            testSourcesOutput = """java {
+                                    |           srcDirs = ${sources['test']['java']}
+                                    |       }""".stripMargin()
+        }
+        def resourcesOutput = ""
+        if (!sources['main']['resources'].empty) {
+            resourcesOutput = """resources {
+                                    |           srcDirs = ${sources['main']['resources']}
+                                    |       }""".stripMargin()
+        }
+        def testResourcesOutput = ""
+        if (!sources['test']['resources'].empty) {
+            testResourcesOutput = """resources {
+                                    |           srcDirs = ${sources['test']['resources']}
+                                    |       }""".stripMargin()
+        }
+        def mainSourceSetOutput = ""
+        if (!javaSourcesOutput.empty || !resourcesOutput.empty) {
+            mainSourceSetOutput = """main {
+                                    |       $javaSourcesOutput
+                                    |       $resourcesOutput
+                                    |   }""".stripMargin()
+        }
+        def testSourceSetOutput = ""
+        if (!testSourcesOutput.empty || !testResourcesOutput.empty) {
+            testSourceSetOutput = """test {
+                                    |       $testSourcesOutput
+                                    |       $testResourcesOutput
+                                    |   }""".stripMargin()
+        }
+        if (!mainSourceSetOutput.empty || !testSourceSetOutput.empty) {
+            """sourceSets {
+                |   $mainSourceSetOutput
+                |   $testSourceSetOutput
+                |}""".stripMargin()
+        } else {
+            ""
+        }
+    }
+
+    def static generateDependencies(ArrayList<Path> dependencyList, Map allLibraries) {
+        def libs = dependencyList.findAll { it.@type == "library" && it.@level == "project" }
+        def projects = dependencyList.findAll { it.@type == "module" }
+
+        def libPaths = []
+        libs.each {
+            def libName = it.@name
+            if (allLibraries.containsKey(libName)) {
+                def libPath = allLibraries.get(libName)
+                libPath['classesPath'].each {
+                    libPaths += "'$it'"
+                }
+            }
+        }
+        def libsOutput = ""
+        if (!libPaths.empty) {
+            libsOutput += "    compile files($libPaths)"
+        }
+        def projectsOutput = ""
+        projects.each {
+            def name = it.@'module-name'
+            projectsOutput += "    compile project(':$name')\n"
+        }
+
+        if (!libsOutput.empty || !projectsOutput.empty) {
+            """dependencies {
+                |$libsOutput
+                |$projectsOutput
+            |}""".stripMargin()
+        } else {
+            ""
+        }
     }
 
     static def addNewProjectToGradle(String projectName, File gradleSettingsFile) {
@@ -124,40 +207,14 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
                     def moduleName = moduleIml.name.replace('.iml', '')
                     if (moduleDir.path != project.projectDir.absolutePath) {
                         if (!gradleSubProjects.containsKey(moduleName)) {
-                            if (moduleDir.listFiles().findAll{ it.name.endsWith('build.gradle') }.empty) {
+                            if (moduleDir.listFiles().findAll { it.name.endsWith('build.gradle') }.empty) {
                                 generateBuildScript(moduleIml, ideaProjectLibraries, project)
                             }
                             addNewProjectToGradle(moduleName, gradleSettingsFile)
                         }
                     }
-
-
-//                    if (moduleDir.path != project.projectDir.absolutePath && moduleDir.listFiles().findAll{ it.name.endsWith('build.gradle') }.empty)
-//
-//                    if (!gradleSubProjects.containsKey(moduleName) && moduleDir.path != project.projectDir.absolutePath) {
-//                        if( moduleDir.listFiles().findAll{ it.name.endsWith('build.gradle') }.empty) {
-//                        println moduleName
-//                    }
-
-//                    generateBuildScript(moduleIml, ideaProjectLibraries, project)
-//                    def projectName = moduleIml.name.replace('.iml', '')
-//                    addNewProjectToGradle(projectName, gradleSettingsFile)
                 }
             }
-//            project.projectDir.listFiles().each {
-//                if (it.isDirectory()) {
-//                    def files = it.listFiles()
-//                    if (files.findAll { it.name.endsWith('build.gradle') }.empty) {
-//                        def list = files.findAll { it.name.endsWith('.iml') }
-//                        if (!list.empty) {
-//                            def moduleIml = list.first()
-//                            generateBuildScript(moduleIml, ideaProjectLibraries, project)
-//                            def newProjectName = moduleIml.name.replace('.iml', '')
-//                            addNewProjectToGradle(newProjectName, gradleSettingsFile)
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 }

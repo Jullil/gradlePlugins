@@ -6,7 +6,9 @@
       <module fileurl="file://$PROJECT_DIR$/moduleOne/moduleOne.iml" filepath="$PROJECT_DIR$/moduleOne/moduleOne.iml" />
       <module fileurl="file://$PROJECT_DIR$/moduleThree/moduleThree.iml" filepath="$PROJECT_DIR$/moduleThree/moduleThree.iml" />
       <module fileurl="file://$PROJECT_DIR$/moduleTwo/moduleTwo.iml" filepath="$PROJECT_DIR$/moduleTwo/moduleTwo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../gradlePluginsSub/subModule1/subModule1.iml" filepath="$PROJECT_DIR$/../gradlePluginsSub/subModule1/subModule1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../gradlePluginsSub/subModule2/subSubModule1/subSubModule1.iml" filepath="$PROJECT_DIR$/../gradlePluginsSub/subModule2/subSubModule1/subSubModule1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../gradlePluginsSub/subModule2/subSubModule2/subSubModule2.iml" filepath="$PROJECT_DIR$/../gradlePluginsSub/subModule2/subSubModule2/subSubModule2.iml" />
     </modules>
   </component>
 </project>
-

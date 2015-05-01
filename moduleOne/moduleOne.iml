@@ -6,6 +6,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/ttes" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
@@ -16,10 +17,25 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="moduleThree" exported="" />
     <orderEntry type="module" module-name="moduleTwo" exported="" />
-    <orderEntry type="library" exported="" name="Gradle: gwt-dev" level="project" />
-    <orderEntry type="library" exported="" name="Gradle: validation-api-1.0.0.GA" level="project" />
-    <orderEntry type="library" exported="" name="Gradle: gwt-user" level="project" />
-    <orderEntry type="library" exported="" name="Gradle: gwt-servlet" level="project" />
+    <orderEntry type="module" module-name="subModule1" exported="" />
+    <orderEntry type="module" module-name="subSubModule2" exported="" />
+    <orderEntry type="module-library" exported="">
+      <library name="Gradle: gwt-user">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../libs/gwt-user.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library name="Gradle: requestfactory-client">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../libs/requestfactory-client.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
-
