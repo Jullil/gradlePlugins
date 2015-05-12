@@ -80,7 +80,7 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
         if (!sourceSetsOutput.empty) {
             buildFile << sourceSetsOutput + "\n\n"
         }
-        def dependencies = generateDependencies(root.component.orderEntry, libraries)
+        def dependencies = generateDependencies(root.component.orderEntry, libraries, project)
         if (!dependencies.empty) {
             buildFile << dependencies + "\n\n"
         }
@@ -158,24 +158,33 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
         }
     }
 
-    def static generateDependencies(ArrayList<Path> dependencyList, Map allLibraries) {
+    def static generateDependencies(ArrayList<Path> dependencyList, Map allLibraries, Project project) {
         def libs = dependencyList.findAll { it.@type == "library" && it.@level == "project" }
         def projects = dependencyList.findAll { it.@type == "module" }
 
-        def libPaths = []
+        def libraryAliases = project.IdeaToGradleConverter.libraryAliases
+
+        def libFilePaths = []
+        def libArtifactories = []
         libs.each {
             def libName = it.@name
-            if (allLibraries.containsKey(libName)) {
+            if (libraryAliases.containsKey(libName)){
+                libArtifactories += libraryAliases.get(libName)
+            } else if (allLibraries.containsKey(libName)) {
                 def libPath = allLibraries.get(libName)
                 libPath['classesPath'].each {
-                    libPaths += "'$it'"
+                    libFilePaths += "'$it'"
                 }
             }
         }
         def libsOutput = ""
-        if (!libPaths.empty) {
-            libsOutput += "    compile files($libPaths)"
+        if (!libFilePaths.empty) {
+            libsOutput += "    compile files($libFilePaths)"
         }
+        if (!libArtifactories.empty) {
+            libsOutput += "    compile( $libArtifactories )"
+        }
+
         def projectsOutput = ""
         projects.each {
             def name = it.@'module-name'
@@ -203,26 +212,26 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
         project.task('convertModule') << {
 
             println project.IdeaToGradleConverter.libraryAliases
-//            def ideaProjectLibraries = parseIdeaLibraries(project.fileTree(dir: '.idea/libraries', include: '**/*.xml').findAll(), project)
-//            File gradleSettingsFile = project.file('settings.gradle')
-//
-//            Map<String, Project> gradleSubProjects = project.childProjects
-//
-//            File ideaModuleFile = project.file('.idea/modules.xml')
-//            if (ideaModuleFile.exists()) {
-//                parseIdeaProjectModules(ideaModuleFile, project).each { moduleIml ->
-//                    def moduleDir = moduleIml.parentFile
-//                    def moduleName = moduleIml.name.replace('.iml', '')
-//                    if (moduleDir.path != project.projectDir.absolutePath) {
-//                        if (!gradleSubProjects.containsKey(moduleName)) {
-//                            if (moduleDir.listFiles().findAll { it.name.endsWith('build.gradle') }.empty) {
-//                                generateBuildScript(moduleIml, ideaProjectLibraries, project)
-//                            }
-//                            addNewProjectToGradle(moduleName, gradleSettingsFile)
-//                        }
-//                    }
-//                }
-//            }
+            def ideaProjectLibraries = parseIdeaLibraries(project.fileTree(dir: '.idea/libraries', include: '**/*.xml').findAll(), project)
+            File gradleSettingsFile = project.file('settings.gradle')
+
+            Map<String, Project> gradleSubProjects = project.childProjects
+
+            File ideaModuleFile = project.file('.idea/modules.xml')
+            if (ideaModuleFile.exists()) {
+                parseIdeaProjectModules(ideaModuleFile, project).each { moduleIml ->
+                    def moduleDir = moduleIml.parentFile
+                    def moduleName = moduleIml.name.replace('.iml', '')
+                    if (moduleDir.path != project.projectDir.absolutePath) {
+                        if (!gradleSubProjects.containsKey(moduleName)) {
+                            if (moduleDir.listFiles().findAll { it.name.endsWith('build.gradle') }.empty) {
+                                generateBuildScript(moduleIml, ideaProjectLibraries, project)
+                            }
+                            addNewProjectToGradle(moduleName, gradleSettingsFile)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -233,6 +242,7 @@ class IdeaToGradleConverterPluginExtension {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
 allprojects {
