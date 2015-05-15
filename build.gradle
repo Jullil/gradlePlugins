@@ -30,7 +30,7 @@ dependencies {
 
 class IdeaToGradleConverterPlugin implements Plugin<Project> {
 
-    static def parseIdeaLibraries(ArrayList<File> libraries, Project project) {
+    static def parseIdeaLibraries(List<File> libraries, Project project) {
         def result = [:]
         def projectPath = project.projectDir.absolutePath
         libraries.each {
@@ -55,14 +55,19 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
         def projectPath = project.projectDir.absolutePath
         def root = new XmlParser().parse(modulesFile)
         root.find { it.@name == 'ProjectModuleManager' }.collect {
-            replaceProjectPath(it.module.@filepath, projectPath)
+            def moduleImlFilePath = it.module.@filepath
+            def moduleImlFileAbsolutePath = replaceProjectPath(moduleImlFilePath, projectPath)
+            //def subDirs = moduleImlFilePath.first().replace('\$PROJECT_DIR\$', '').replace(/^[\\\\/]*\.*(.*)[^\\\\/]\.iml$/, '$1')
+            def subDirs = moduleImlFilePath.first().replace('\$PROJECT_DIR\$', '').replaceAll(/^[\\\/]*\.*(.*)[\\\/]+[^\\\/]+\.iml$/){ all, path -> path }.replace(/[\\\/]*/, ':')
+            println subDirs
+            moduleImlFileAbsolutePath
         }.first().collect { moduleImlPath ->
             File moduleImlFile = project.file(moduleImlPath)
             moduleImlFile
         }
     }
 
-    static def replaceProjectPath(ArrayList<Path> path, String projectPath) {
+    static def replaceProjectPath(List<Path> path, String projectPath) {
         projectPath = projectPath.replace('\\', '/')
         path.collect {
             it.replaceAll('jar:\\/\\/', '').replaceAll('!\\/', '').replace('\$PROJECT_DIR\$', projectPath)
@@ -87,7 +92,7 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
         }
     }
 
-    def static generateSourceSets(ArrayList<Path> sourceList) {
+    def static generateSourceSets(List<Path> sourceList) {
         def sources = [
                 'main': [
                         'java'     : [],
@@ -228,16 +233,16 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
             File ideaModuleFile = project.file('.idea/modules.xml')
             if (ideaModuleFile.exists()) {
                 parseIdeaProjectModules(ideaModuleFile, project).each { moduleIml ->
-                    def moduleDir = moduleIml.parentFile
-                    def moduleName = moduleIml.name.replace('.iml', '')
-                    if (moduleDir.path != project.projectDir.absolutePath) {
-                        if (!gradleSubProjects.containsKey(moduleName)) {
-                            if (moduleDir.listFiles().findAll { it.name.endsWith('build.gradle') }.empty) {
-                                generateBuildScript(moduleIml, ideaProjectLibraries, project)
-                            }
-                            addNewProjectToGradle(moduleName, gradleSettingsFile)
-                        }
-                    }
+//                    def moduleDir = moduleIml.parentFile
+//                    def moduleName = moduleIml.name.replace('.iml', '')
+//                    if (moduleDir.path != project.projectDir.absolutePath) {
+//                        if (!gradleSubProjects.containsKey(moduleName)) {
+//                            if (moduleDir.listFiles().findAll { it.name.endsWith('build.gradle') }.empty) {
+//                                generateBuildScript(moduleIml, ideaProjectLibraries, project)
+//                            }
+//                            addNewProjectToGradle(moduleName, gradleSettingsFile)
+//                        }
+//                    }
                 }
             }
         }
@@ -254,7 +259,7 @@ task wrapper(type: Wrapper) {
 }
 
 allprojects {
-    apply plugin: 'idea'
+
     apply plugin: 'java'
     apply plugin: 'maven'
 
