@@ -204,7 +204,7 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
             def name = it.@'module-name'
             if (allProjects.containsKey(name)) {
                 def projectProps = allProjects.get(name)
-                projectsOutput += "    compile project(':${projectProps['gradleName']}')\n"
+                projectsOutput += "    compile project(':${projectProps['name']}')\n"
             }
         }
 
@@ -219,9 +219,9 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
     }
 
     static def addNewProjectToGradle(Map moduleParams, File gradleSettingsFile) {
-        gradleSettingsFile << "include '${moduleParams['gradleName']}'\n"
+        gradleSettingsFile << "include '${moduleParams['name']}'\n"
         if (!moduleParams['rootDir'].empty) {
-            gradleSettingsFile << "project(':${moduleParams['gradleName']}').projectDir = file('${moduleParams['rootDir']}')\n"
+            gradleSettingsFile << "project(':${moduleParams['name']}').projectDir = file('${moduleParams['rootDir']}')\n"
         }
     }
 
