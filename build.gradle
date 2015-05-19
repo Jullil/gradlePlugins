@@ -48,16 +48,15 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
     }
 
     static def parseIdeaProjectModules(File modulesFile, Project project) {
-        def projectPath = project.projectDir.absolutePath
-        def userHomePath = System.properties['user.home']
-        def userHomePathSafe = userHomePath.replace('\\', '\\\\')
+        def projectPath = getProjectPath(project)
+        def userHomePath = getUserHomePath()
         def root = new XmlParser().parse(modulesFile)
         Map<String, Object> modules = [:]
         root.find{ it.@name == 'ProjectModuleManager' }.collect{ getFilePath(it.module.@filepath, projectPath) }.first().each{ moduleImlPath ->
             File moduleImlFile = new File((String) moduleImlPath)
             def moduleRootDir = moduleImlPath.replaceAll(/^($projectPath\/)?(.*)[\\\/]+[^\\\/]+\.iml$/){all, pPath, path -> path }
             def moduleName = moduleImlFile.name.replace('.iml', '')
-            def moduleGradleName = moduleRootDir.replaceAll(/^($userHomePathSafe)?[\\\/\.]*\.*(.*)/){all, var, path -> path }.replace('/', ":")
+            def moduleGradleName = moduleRootDir.replaceAll(/^($userHomePath)?[\\\/\.]*\.*(.*)/){all, var, path -> path }.replace('/', ":")
             modules += [(moduleName) : [
                     'name'       : moduleName,
                     'gradleName' : moduleGradleName,
@@ -71,8 +70,15 @@ class IdeaToGradleConverterPlugin implements Plugin<Project> {
     static def getFilePath(List<Path> path, String projectPath) {
         projectPath = projectPath.replace('\\', '/')
         path.collect {
-            it.replaceAll(/^jar:\\/\\//, '').replaceAll(/!\\/$/, '').replace('\$PROJECT_DIR\$', projectPath).replace('\$USER_HOME\$', System.properties['user.home'])
+            it.replaceAll(/^jar:\\/\\//, '').replaceAll(/!\\/$/, '').replace('\$PROJECT_DIR\$', projectPath).replace('\$USER_HOME\$', getUserHomePath())
         }
+    }
+
+    static def getProjectPath(Project project) {
+      project.projectDir.absolutePath.replace('\\', '/')
+    }
+    static def getUserHomePath() {
+      System.properties['user.home'].replace('\\', '/')
     }
 
     static def cleanSourcePath(String url) {
