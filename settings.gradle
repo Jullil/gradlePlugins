@@ -1,2 +1,13 @@
 rootProject.name = 'gradlePlugins'
+include 'plugin'
 
+
+//include 'gradlePluginSub'
+
+//include 'moduleOne'
+//include 'moduleThree'
+//include 'moduleTwo'
+//include 'gradlePluginSub:sm1'
+//project(':gradlePluginSub:sm1').projectDir = new File('../gradlePluginSub/sm1')
+//include 'gradlePluginSub:sm3'
+//project(':gradlePluginSub:sm3').projectDir = new File('../gradlePluginSub/sm3')
